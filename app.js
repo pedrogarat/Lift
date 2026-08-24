@@ -384,15 +384,54 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderMarkdown(md) {
         if (!md) return '';
         try {
-            let html = md.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1">');
-            html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-            html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-            html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-            html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
-            html = html.replace(/\n\n/g, '<br><br>');
-            return html;
+            let text = md;
+            
+            // Ocultar bloques mermaid no compatibles en HTML estático
+            text = text.replace(/```mermaid[\s\S]*?```/g, '');
+            text = text.replace(/```[\s\S]*?```/g, '');
+
+            // Imágenes
+            text = text.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1">');
+
+            // Encabezados
+            text = text.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+            text = text.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+            text = text.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+            // Citas / Blockquotes
+            text = text.replace(/^>\s*(.*$)/gim, '<blockquote>$1</blockquote>');
+
+            // Formato de texto
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+            // Listas
+            text = text.replace(/^\* (.*$)/gim, '<li>$1</li>');
+            text = text.replace(/^\d+\.\s+(.*$)/gim, '<li>$1</li>');
+
+            // Tablas (convertir filas con |)
+            text = text.replace(/^\|(.*)\|$/gim, (match, content) => {
+                if (content.includes('---')) return '';
+                const cells = content.split('|').map(c => `<td>${c.trim()}</td>`).join('');
+                return `<tr>${cells}</tr>`;
+            });
+
+            // Agrupar filas de tabla en <table>
+            text = text.replace(/(<tr>.*?<\/tr>\s*)+/g, match => `<table class="markdown-table">${match}</table>`);
+
+            // Párrafos y Saltos de línea
+            const blocks = text.split(/\n\s*\n/);
+            const htmlBlocks = blocks.map(b => {
+                const trimmed = b.trim();
+                if (!trimmed) return '';
+                if (trimmed.startsWith('<h') || trimmed.startsWith('<blockquote') || trimmed.startsWith('<table') || trimmed.startsWith('<li') || trimmed.startsWith('<img')) {
+                    return trimmed.replace(/\n/g, '<br>');
+                }
+                return `<p>${trimmed.replace(/\n/g, '<br>')}</p>`;
+            });
+
+            return htmlBlocks.join('\n');
         } catch (e) {
             console.error('Error rendering markdown:', e);
             return md;
@@ -488,11 +527,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- MODALES CONTROL ---
     window.openModal = function(id) {
-        document.getElementById(id).classList.remove('hidden');
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.remove('hidden');
+
+        if (id === 'modal-genesis') {
+            const genesisContainer = document.getElementById('genesis-content');
+            if (genesisContainer && typeof NOVEL_DATA !== 'undefined' && NOVEL_DATA.genesisRaw) {
+                genesisContainer.innerHTML = renderMarkdown(NOVEL_DATA.genesisRaw);
+            }
+        }
     };
 
     window.closeModal = function(id) {
-        document.getElementById(id).classList.add('hidden');
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
     };
 
     // --- MODO ENFOQUE ---
