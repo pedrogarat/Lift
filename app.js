@@ -1,0 +1,1103 @@
+/* ==========================================================================
+   LÓGICA DE LA APLICACIÓN DE LECTURA - EL CÓDIGO DE PROMETEO
+   ========================================================================== */
+
+document.addEventListener('DOMContentLoaded', () => {
+    // --- ESTADO INICIAL ---
+    let currentChapterIndex = 0; // 0-based index for NOVEL_DATA.chapters
+    let readStatus = JSON.parse(localStorage.getItem('prometheus_read_status')) || {};
+    let bookmark = JSON.parse(localStorage.getItem('prometheus_bookmark')) || null;
+    let audioContext = null;
+    let ambientGain = null;
+    let isAudioPlaying = false;
+
+    // --- ELEMENTOS DEL DOM ---
+    const progressBar = document.getElementById('progress-bar');
+    const headerChapterIndicator = document.getElementById('header-chapter-indicator');
+    
+    // Sidebar
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const sidebarChaptersList = document.getElementById('sidebar-chapters-list');
+    const sidebarFilter = document.getElementById('sidebar-filter');
+    const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
+    const btnCloseSidebar = document.getElementById('btn-close-sidebar');
+
+    // Canvas de Lectura
+    const chapterActBadge = document.getElementById('chapter-act-badge');
+    const chapterMainTitle = document.getElementById('chapter-main-title');
+    const metaPov = document.getElementById('meta-pov');
+    const metaLocation = document.getElementById('meta-location');
+    const metaReadtime = document.getElementById('meta-readtime');
+    const metaPages = document.getElementById('meta-pages');
+    const sceneFicheContent = document.getElementById('scene-fiche-content');
+    const chapterBodyContent = document.getElementById('chapter-body-content');
+
+    // Botones de Navegación
+    const btnPrevChapter = document.getElementById('btn-prev-chapter');
+    const btnNextChapter = document.getElementById('btn-next-chapter');
+    const prevChapterTitle = document.getElementById('prev-chapter-title');
+    const nextChapterTitle = document.getElementById('next-chapter-title');
+    const btnBookmark = document.getElementById('btn-bookmark');
+    const bookmarkText = document.getElementById('bookmark-text');
+    const btnScrollTop = document.getElementById('btn-scroll-top');
+
+    // Modales y Botones
+    const btnOpenSettings = document.getElementById('btn-open-settings');
+    const btnOpenCodex = document.getElementById('btn-open-codex');
+    const btnOpenEscaleta = document.getElementById('btn-open-escaleta');
+    const btnOpenSearch = document.getElementById('btn-open-search');
+    const btnOpenAudiobook = document.getElementById('btn-open-audiobook');
+    const btnListenChapter = document.getElementById('btn-listen-chapter');
+    const btnToggleFocus = document.getElementById('btn-toggle-focus');
+    const btnToggleAudio = document.getElementById('btn-toggle-audio');
+
+    // Elementos del Reproductor de Audiolibro
+    const abTrackSelect = document.getElementById('ab-track-select');
+    const abOptgroupChapters = document.getElementById('ab-optgroup-chapters');
+    const abOptgroupBios = document.getElementById('ab-optgroup-bios');
+    const abSourceMode = document.getElementById('ab-source-mode');
+    const abVocalProfile = document.getElementById('ab-vocal-profile');
+    const abSoundscapePreset = document.getElementById('ab-soundscape-preset');
+    const abVoiceSelect = document.getElementById('ab-voice-select');
+    const abSpeedSelect = document.getElementById('ab-speed-select');
+    const abAmbientVol = document.getElementById('ab-ambient-vol');
+    const abBtnPlay = document.getElementById('ab-btn-play');
+    const abPlayIcon = document.getElementById('ab-play-icon');
+    const abBtnPrev = document.getElementById('ab-btn-prev');
+    const abBtnNext = document.getElementById('ab-btn-next');
+    const abBtnRewind = document.getElementById('ab-btn-rewind');
+    const abBtnForward = document.getElementById('ab-btn-forward');
+    const abCoverImg = document.getElementById('ab-cover-img');
+    const abEqualizer = document.getElementById('ab-equalizer');
+    const abTrackTitle = document.getElementById('ab-track-title');
+    const abTrackMeta = document.getElementById('ab-track-meta');
+    const abCurrentTime = document.getElementById('ab-current-time');
+    const abStatusText = document.getElementById('ab-status-text');
+    const abProgressBar = document.getElementById('ab-progress-bar');
+    const abProgressContainer = document.getElementById('ab-progress-container');
+    const abTranscriptBody = document.getElementById('ab-transcript-body');
+
+    // Estado del Audiolibro
+    let abCurrentTrackType = 'chapter'; // 'chapter' | 'bio'
+    let abCurrentTrackIndex = 0;
+    let abParagraphs = [];
+    let abActiveParagraphIndex = 0;
+    let abIsPlaying = false;
+    let abSpeechSynth = window.speechSynthesis;
+    let abCurrentUtterance = null;
+    let abVoices = [];
+    let abParsedBios = [];
+
+    // Elementos de Modales
+    const codexContentRendered = document.getElementById('codex-content-rendered');
+    const escaletaContentRendered = document.getElementById('escaleta-content-rendered');
+    const globalSearchInput = document.getElementById('global-search-input');
+    const searchResultsList = document.getElementById('search-results-list');
+
+    // Controles de Ajustes
+    const sliderFontSize = document.getElementById('slider-font-size');
+    const sliderLineHeight = document.getElementById('slider-line-height');
+    const sliderTextWidth = document.getElementById('slider-text-width');
+    const valFontSize = document.getElementById('val-font-size');
+    const valLineHeight = document.getElementById('val-line-height');
+    const valTextWidth = document.getElementById('val-text-width');
+
+    // --- INICIALIZACIÓN ---
+    initApp();
+
+    function initApp() {
+        loadPreferences();
+        renderSidebarList();
+        renderCodexAndEscaleta();
+        initAudiobook();
+
+        // Cargar marcador o capítulo 0
+        if (bookmark && bookmark.chapterIndex !== undefined && bookmark.chapterIndex >= 0 && bookmark.chapterIndex < NOVEL_DATA.chapters.length) {
+            loadChapter(bookmark.chapterIndex, bookmark.scrollTop);
+        } else {
+            loadChapter(0);
+        }
+
+        setupEventListeners();
+        updateProgressBar();
+    }
+
+    // --- MANEJADOR DE EVENTOS GENERAL ---
+    function setupEventListeners() {
+        // Eventos de Navegación entre capítulos
+        btnPrevChapter.addEventListener('click', () => {
+            if (currentChapterIndex > 0) loadChapter(currentChapterIndex - 1);
+        });
+
+        btnNextChapter.addEventListener('click', () => {
+            if (currentChapterIndex < NOVEL_DATA.chapters.length - 1) loadChapter(currentChapterIndex + 1);
+        });
+
+        // Sidebar
+        btnToggleSidebar.addEventListener('click', openSidebar);
+        btnCloseSidebar.addEventListener('click', closeSidebar);
+        sidebarOverlay.addEventListener('click', closeSidebar);
+        sidebarFilter.addEventListener('input', renderSidebarList);
+
+        // Modales
+        btnOpenSettings.addEventListener('click', () => openModal('modal-settings'));
+        btnOpenCodex.addEventListener('click', () => openModal('modal-codex'));
+        btnOpenEscaleta.addEventListener('click', () => openModal('modal-escaleta'));
+        btnOpenSearch.addEventListener('click', () => {
+            openModal('modal-search');
+            globalSearchInput.focus();
+        });
+        if (btnOpenAudiobook) {
+            btnOpenAudiobook.addEventListener('click', () => openAudiobookModal('chapter', currentChapterIndex));
+        }
+        if (btnListenChapter) {
+            btnListenChapter.addEventListener('click', () => {
+                openAudiobookModal('chapter', currentChapterIndex);
+                playAudiobook();
+            });
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.classList.add('hidden');
+            });
+        });
+
+        // Temas y Fuentes
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.addEventListener('click', () => setTheme(btn.getAttribute('data-theme')));
+        });
+
+        document.querySelectorAll('.font-btn').forEach(btn => {
+            btn.addEventListener('click', () => setFont(btn.getAttribute('data-font')));
+        });
+
+        // Sliders
+        sliderFontSize.addEventListener('input', (e) => setFontSize(e.target.value));
+        sliderLineHeight.addEventListener('input', (e) => setLineHeight(e.target.value));
+        sliderTextWidth.addEventListener('input', (e) => setTextWidth(e.target.value));
+
+        // Enfoque y Audio
+        btnToggleFocus.addEventListener('click', toggleFocusMode);
+        btnToggleAudio.addEventListener('click', toggleAmbientSound);
+
+        // Marcador y Scroll Top
+        btnBookmark.addEventListener('click', saveBookmark);
+        btnScrollTop.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Buscador
+        globalSearchInput.addEventListener('input', handleGlobalSearch);
+
+        // Scroll
+        window.addEventListener('scroll', updateProgressBar);
+
+        // Atajos de teclado
+        document.addEventListener('keydown', handleKeyboardShortcuts);
+    }
+
+    // --- CARGA DE PREFERENCIAS ---
+    function loadPreferences() {
+        const theme = localStorage.getItem('prometheus_theme') || 'obsidian';
+        const font = localStorage.getItem('prometheus_font') || 'serif';
+        const fontSize = localStorage.getItem('prometheus_font_size') || '19';
+        const lineHeight = localStorage.getItem('prometheus_line_height') || '1.8';
+        const textWidth = localStorage.getItem('prometheus_text_width') || '800';
+
+        setTheme(theme);
+        setFont(font);
+        setFontSize(fontSize);
+        setLineHeight(lineHeight);
+        setTextWidth(textWidth);
+    }
+
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('prometheus_theme', theme);
+        document.querySelectorAll('.theme-btn').forEach(b => {
+            b.classList.toggle('active', b.getAttribute('data-theme') === theme);
+        });
+    }
+
+    function setFont(font) {
+        document.documentElement.setAttribute('data-font', font);
+        localStorage.setItem('prometheus_font', font);
+        document.querySelectorAll('.font-btn').forEach(b => {
+            b.classList.toggle('active', b.getAttribute('data-font') === font);
+        });
+    }
+
+    function setFontSize(size) {
+        document.documentElement.style.setProperty('--reader-font-size', `${size}px`);
+        if (valFontSize) valFontSize.textContent = `${size}px`;
+        if (sliderFontSize) sliderFontSize.value = size;
+        localStorage.setItem('prometheus_font_size', size);
+    }
+
+    function setLineHeight(height) {
+        document.documentElement.style.setProperty('--reader-line-height', height);
+        if (valLineHeight) valLineHeight.textContent = height;
+        if (sliderLineHeight) sliderLineHeight.value = height;
+        localStorage.setItem('prometheus_line_height', height);
+    }
+
+    function setTextWidth(width) {
+        document.documentElement.style.setProperty('--reader-max-width', `${width}px`);
+        if (valTextWidth) valTextWidth.textContent = `${width}px`;
+        if (sliderTextWidth) sliderTextWidth.value = width;
+        localStorage.setItem('prometheus_text_width', width);
+    }
+
+    // --- CARGAR Y RENDERIZAR CAPÍTULO ---
+    function loadChapter(index, scrollToPosition = 0) {
+        if (index < 0 || index >= NOVEL_DATA.chapters.length) return;
+
+        currentChapterIndex = index;
+        const chap = NOVEL_DATA.chapters[index];
+
+        // Actualizar UI del Encabezado y Viñeta
+        const chapterVignetteImg = document.getElementById('chapter-vignette-img');
+        if (chapterVignetteImg && chap.povImage) {
+            chapterVignetteImg.src = chap.povImage;
+            chapterVignetteImg.alt = `Retrato POV: ${chap.pov}`;
+        }
+
+        chapterActBadge.textContent = chap.act;
+        chapterMainTitle.textContent = `Capítulo ${chap.id}: ${chap.title}`;
+        metaPov.textContent = `👁️ POV: ${chap.pov}`;
+        metaLocation.textContent = `📍 ${chap.location}`;
+        metaReadtime.textContent = `⏱️ ${chap.readTime}`;
+        metaPages.textContent = `📄 ~${chap.pages} páginas`;
+        headerChapterIndicator.textContent = `Capítulo ${chap.id} de ${NOVEL_DATA.totalChapters}`;
+
+        // Ficha de la escena (desglose)
+        if (chap.desglose) {
+            sceneFicheContent.innerHTML = renderMarkdown(chap.desglose);
+        } else {
+            sceneFicheContent.innerHTML = '<p>Ficha de escena nominal.</p>';
+        }
+
+        // Renderizar el cuerpo del texto
+        chapterBodyContent.innerHTML = parseChapterBody(chap.content);
+
+        // Actualizar botones de navegación
+        updateNavButtons();
+
+        // Actualizar marcador visual
+        updateBookmarkState();
+
+        // Actualizar lista en sidebar
+        renderSidebarList();
+
+        // Desplazar vista al inicio o posición guardada
+        if (scrollToPosition > 0) {
+            window.scrollTo({ top: scrollToPosition, behavior: 'smooth' });
+        } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Guardar progreso automático
+        readStatus[chap.id] = true;
+        localStorage.setItem('prometheus_read_status', JSON.stringify(readStatus));
+
+        closeSidebar();
+    }
+
+    function updateNavButtons() {
+        if (currentChapterIndex > 0) {
+            btnPrevChapter.style.display = 'flex';
+            prevChapterTitle.textContent = NOVEL_DATA.chapters[currentChapterIndex - 1].title;
+        } else {
+            btnPrevChapter.style.display = 'none';
+        }
+
+        if (currentChapterIndex < NOVEL_DATA.chapters.length - 1) {
+            btnNextChapter.style.display = 'flex';
+            nextChapterTitle.textContent = NOVEL_DATA.chapters[currentChapterIndex + 1].title;
+        } else {
+            btnNextChapter.style.display = 'none';
+        }
+    }
+
+    // --- PARSER DE MARKDOWN PARA CAPÍTULOS ---
+    function parseChapterBody(rawMarkdown) {
+        let text = rawMarkdown.replace(/^#\s+Capítulo\s+\d+:.*$/m, '');
+        text = text.replace(/### FICHA DE LA ESCENA[\s\S]*?---/g, '');
+
+        // Convertir divisores `---` en divisores elegantes
+        text = text.replace(/^---$/gm, '<div class="scene-divider"><span class="scene-divider-icon">✦</span></div>');
+
+        // Imágenes e Ilustraciones de Escena 16:9
+        text = text.replace(/!\[(.*?)\]\((.*?)\)\s*\n\*Figura (.*?)\*/g, (match, alt, src, fig) => {
+            return `<figure class="scene-illustration-figure">
+                <div class="scene-illustration-frame">
+                    <img src="${src}" alt="${alt}" class="scene-illustration-img" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src=this.src.replace(/\\.(png|jpg)$/, &quot;.svg&quot;);}">
+                </div>
+                <figcaption class="scene-illustration-caption"><strong>Figura ${fig}</strong></figcaption>
+            </figure>`;
+        });
+        text = text.replace(/!\[(.*?)\]\((.*?)\)/g, (match, alt, src) => {
+            return `<figure class="scene-illustration-figure"><img src="${src}" alt="${alt}" class="scene-illustration-img" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src=this.src.replace(/\\.(png|jpg)$/, &quot;.svg&quot;);}"></figure>`;
+        });
+
+        // Encabezados
+        text = text.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+        text = text.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+
+        // Código y Consolas
+        text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+        text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+        // Formato
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+        // Párrafos
+        const lines = text.split(/\n\s*\n/);
+        const parsedParagraphs = lines.map(block => {
+            const trimmed = block.trim();
+            if (!trimmed) return '';
+            if (trimmed.startsWith('<h') || trimmed.startsWith('<div') || trimmed.startsWith('<pre') || trimmed.startsWith('<figure')) {
+                return trimmed;
+            }
+            return `<p>${trimmed}</p>`;
+        });
+
+        return parsedParagraphs.join('\n');
+    }
+
+    function renderMarkdown(md) {
+        if (!md) return '';
+        let html = md.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1">');
+        html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+        html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+        html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
+        html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+        html = html.replace(/\n\n/g, '<br><br>');
+        return html;
+    }
+
+    // --- RENDERIZAR SIDEBAR Y CODICES ---
+    function renderSidebarList() {
+        sidebarChaptersList.innerHTML = '';
+        const filterText = sidebarFilter.value.toLowerCase().trim();
+
+        NOVEL_DATA.chapters.forEach((chap, idx) => {
+            if (filterText && !chap.title.toLowerCase().includes(filterText) && !chap.location.toLowerCase().includes(filterText)) {
+                return;
+            }
+
+            const item = document.createElement('div');
+            item.className = `chapter-item ${idx === currentChapterIndex ? 'active' : ''}`;
+            item.onclick = () => loadChapter(idx);
+
+            const isRead = readStatus[chap.id];
+
+            item.innerHTML = `
+                <div class="item-act">${chap.act.split(':')[0]} ${isRead ? '✓' : ''}</div>
+                <div class="item-title">Capítulo ${chap.id}: ${chap.title}</div>
+                <div class="item-meta">
+                    <span>⏱️ ${chap.readTime}</span>
+                    <span>📄 ~${chap.pages} págs</span>
+                    <span>📍 ${chap.location.split(',')[0]}</span>
+                </div>
+            `;
+            sidebarChaptersList.appendChild(item);
+        });
+    }
+
+    function renderCodexAndEscaleta() {
+        codexContentRendered.innerHTML = renderMarkdown(NOVEL_DATA.personajesRaw);
+        escaletaContentRendered.innerHTML = renderMarkdown(NOVEL_DATA.escaletaRaw);
+    }
+
+    // --- MARCADOR Y PROGRESO ---
+    function saveBookmark() {
+        bookmark = {
+            chapterIndex: currentChapterIndex,
+            scrollTop: window.scrollY,
+            title: NOVEL_DATA.chapters[currentChapterIndex].title
+        };
+        localStorage.setItem('prometheus_bookmark', JSON.stringify(bookmark));
+        updateBookmarkState();
+
+        bookmarkText.textContent = '¡Guardado!';
+        setTimeout(updateBookmarkState, 1500);
+    }
+
+    function updateBookmarkState() {
+        if (bookmark && bookmark.chapterIndex === currentChapterIndex) {
+            bookmarkText.textContent = 'Marcador Guardado';
+            btnBookmark.style.borderColor = 'var(--accent-amber)';
+        } else {
+            bookmarkText.textContent = 'Guardar Marcador';
+            btnBookmark.style.borderColor = 'var(--border-color)';
+        }
+    }
+
+    function updateProgressBar() {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        progressBar.style.width = `${scrollPercent}%`;
+
+        if (scrollTop > 400) {
+            btnScrollTop.classList.add('visible');
+        } else {
+            btnScrollTop.classList.remove('visible');
+        }
+    }
+
+    // --- SIDEBAR CONTROL ---
+    function openSidebar() {
+        sidebar.classList.add('open');
+        sidebarOverlay.classList.add('open');
+    }
+
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('open');
+    }
+
+    // --- MODALES CONTROL ---
+    window.openModal = function(id) {
+        document.getElementById(id).classList.remove('hidden');
+    };
+
+    window.closeModal = function(id) {
+        document.getElementById(id).classList.add('hidden');
+    };
+
+    // --- MODO ENFOQUE ---
+    function toggleFocusMode() {
+        document.body.classList.toggle('focus-mode');
+        if (document.body.classList.contains('focus-mode')) {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            }
+        }
+    }
+
+    // --- BUSCADOR GLOBAL ---
+    function handleGlobalSearch(e) {
+        const query = e.target.value.trim().toLowerCase();
+        searchResultsList.innerHTML = '';
+
+        if (query.length < 2) {
+            searchResultsList.innerHTML = '<p class="search-placeholder">Introduce al menos 2 caracteres para buscar en todos los capítulos...</p>';
+            return;
+        }
+
+        let matchCount = 0;
+
+        NOVEL_DATA.chapters.forEach((chap, idx) => {
+            const contentLower = chap.content.toLowerCase();
+            let pos = contentLower.indexOf(query);
+
+            if (pos !== -1) {
+                matchCount++;
+                const start = Math.max(0, pos - 60);
+                const end = Math.min(chap.content.length, pos + 100);
+                let snippet = chap.content.substring(start, end).replace(/\n/g, ' ');
+                
+                const regex = new RegExp(`(${query})`, 'gi');
+                snippet = snippet.replace(regex, '<span class="highlight">$1</span>');
+
+                const item = document.createElement('div');
+                item.className = 'search-result-item';
+                item.onclick = () => {
+                    closeModal('modal-search');
+                    loadChapter(idx);
+                };
+                item.innerHTML = `
+                    <div class="search-result-title">Capítulo ${chap.id}: ${chap.title}</div>
+                    <div class="search-result-snippet">"...${snippet}..."</div>
+                `;
+                searchResultsList.appendChild(item);
+            }
+        });
+
+        if (matchCount === 0) {
+            searchResultsList.innerHTML = '<p class="search-placeholder">No se encontraron coincidencias para tu búsqueda.</p>';
+        }
+    }
+
+    // --- SINTETIZADOR DE AMBIENTE SONORO (WEB AUDIO API) ---
+    function toggleAmbientSound() {
+        if (!audioContext) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioContext = new AudioContext();
+        }
+
+        if (isAudioPlaying) {
+            stopAmbientSound();
+        } else {
+            startAmbientSound();
+        }
+    }
+
+    function startAmbientSound() {
+        if (!audioContext) return;
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+
+        ambientGain = audioContext.createGain();
+        ambientGain.gain.setValueAtTime(0.04, audioContext.currentTime);
+
+        const bufferSize = audioContext.sampleRate * 2;
+        const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+        }
+
+        const whiteNoise = audioContext.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+        whiteNoise.loop = true;
+
+        const filter = audioContext.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(160, audioContext.currentTime);
+
+        whiteNoise.connect(filter);
+        filter.connect(ambientGain);
+        ambientGain.connect(audioContext.destination);
+
+        whiteNoise.start();
+        isAudioPlaying = true;
+
+        btnToggleAudio.classList.add('active');
+        btnToggleAudio.style.borderColor = 'var(--accent-pink)';
+        btnToggleAudio.style.color = 'var(--accent-pink)';
+    }
+
+    function stopAmbientSound() {
+        if (ambientGain) {
+            ambientGain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.5);
+            setTimeout(() => {
+                isAudioPlaying = false;
+                btnToggleAudio.classList.remove('active');
+                btnToggleAudio.style.borderColor = 'var(--border-color)';
+                btnToggleAudio.style.color = 'var(--text-primary)';
+            }, 500);
+        }
+    }
+
+    // --- ATAJOS DE TECLADO ---
+    function handleKeyboardShortcuts(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        if (e.key === 'ArrowLeft') {
+            if (currentChapterIndex > 0) loadChapter(currentChapterIndex - 1);
+        } else if (e.key === 'ArrowRight') {
+            if (currentChapterIndex < NOVEL_DATA.chapters.length - 1) loadChapter(currentChapterIndex + 1);
+        } else if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+            closeSidebar();
+        } else if (e.key === 'f' || e.key === 'F') {
+            toggleFocusMode();
+        }
+    }
+
+    /* ==========================================================================
+       LÓGICA Y MOTOR DEL REPRODUCTOR DE AUDIOLIBRO (TTS Y SINTETIZADOR)
+       ========================================================================== */
+
+    function initAudiobook() {
+        if (!abTrackSelect) return;
+
+        // Parsear biografías
+        abParsedBios = parseBiografiasData();
+
+        // Poblar Selector de Capítulos
+        abOptgroupChapters.innerHTML = '';
+        NOVEL_DATA.chapters.forEach((chap, idx) => {
+            const opt = document.createElement('option');
+            opt.value = `chapter-${idx}`;
+            opt.textContent = `Capítulo ${chap.id}: ${chap.title}`;
+            abOptgroupChapters.appendChild(opt);
+        });
+
+        // Poblar Selector de Biografías
+        abOptgroupBios.innerHTML = '';
+        abParsedBios.forEach((bio, idx) => {
+            const opt = document.createElement('option');
+            opt.value = `bio-${idx}`;
+            opt.textContent = `Biografía: ${bio.name}`;
+            abOptgroupBios.appendChild(opt);
+        });
+
+        // Cargar voces del sistema TTS
+        loadTTSVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadTTSVoices;
+        }
+
+        // Registrar Eventos del Reproductor
+        abTrackSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            const [type, idxStr] = val.split('-');
+            const idx = parseInt(idxStr, 10);
+            loadAudiobookTrack(type, idx);
+            if (abIsPlaying) playAudiobook();
+        });
+
+        abBtnPlay.addEventListener('click', togglePlayPauseAudiobook);
+
+        abBtnPrev.addEventListener('click', () => {
+            if (abCurrentTrackIndex > 0) {
+                loadAudiobookTrack(abCurrentTrackType, abCurrentTrackIndex - 1);
+                if (abIsPlaying) playAudiobook();
+            }
+        });
+
+        abBtnNext.addEventListener('click', () => {
+            const maxIdx = abCurrentTrackType === 'chapter' ? NOVEL_DATA.chapters.length - 1 : abParsedBios.length - 1;
+            if (abCurrentTrackIndex < maxIdx) {
+                loadAudiobookTrack(abCurrentTrackType, abCurrentTrackIndex + 1);
+                if (abIsPlaying) playAudiobook();
+            }
+        });
+
+        abBtnRewind.addEventListener('click', () => skipAudiobookParagraph(-1));
+        abBtnForward.addEventListener('click', () => skipAudiobookParagraph(1));
+
+        abSpeedSelect.addEventListener('change', () => {
+            if (abIsPlaying) playAudiobookParagraph(abActiveParagraphIndex);
+        });
+
+        if (abVocalProfile) {
+            abVocalProfile.addEventListener('change', () => {
+                if (abIsPlaying) playAudiobookParagraph(abActiveParagraphIndex);
+            });
+        }
+
+        abAmbientVol.addEventListener('input', (e) => {
+            const vol = parseFloat(e.target.value);
+            if (vol > 0 && !isAudioPlaying) {
+                startAmbientSound();
+            }
+            if (ambientGain && audioContext) {
+                ambientGain.gain.setValueAtTime(vol * 0.15, audioContext.currentTime);
+            }
+        });
+    }
+
+    function parseBiografiasData() {
+        if (!NOVEL_DATA.biografiasRaw) return [];
+        const bios = [];
+        const raw = NOVEL_DATA.biografiasRaw;
+        const sections = raw.split(/###\s+\d+\.\s+/);
+
+        sections.slice(1).forEach((sec, idx) => {
+            const lines = sec.split('\n');
+            const nameHeader = lines[0].trim();
+            const cleanName = nameHeader.replace(/\(.*\)/, '').trim();
+
+            let coverImg = 'cover.png';
+            const imgMatch = sec.match(/\[`img\/(.*?)`\]/);
+            if (imgMatch && imgMatch[1]) {
+                coverImg = 'img/' + imgMatch[1];
+            } else if (idx === 0) coverImg = 'img/char_cole_vance.png';
+            else if (idx === 1) coverImg = 'img/char_maya_lin.png';
+            else if (idx === 2) coverImg = 'img/char_kael_glitch.png';
+            else if (idx === 3) coverImg = 'img/char_bob_robot.png';
+            else if (idx === 4) coverImg = 'img/char_padre_thomas.png';
+            else if (idx === 5) coverImg = 'img/char_aura_prototype.png';
+            else if (idx === 6) coverImg = 'img/char_sterling_hayes.png';
+            else if (idx === 7) coverImg = 'img/char_marcus_bennett.png';
+
+            // Limpiar texto para párrafos
+            const bodyLines = lines.slice(1).filter(l => !l.startsWith('---'));
+            const fullText = bodyLines.join('\n');
+            const rawParagraphs = fullText.split(/\n\n+/);
+            const paragraphs = rawParagraphs
+                .map(p => p.replace(/[\*#_`]/g, '').replace(/\[.*?\]\(.*?\)/g, '').trim())
+                .filter(p => p.length > 5);
+
+            bios.push({
+                id: idx,
+                name: cleanName,
+                fullName: nameHeader,
+                coverImage: coverImg,
+                paragraphs: paragraphs
+            });
+        });
+        return bios;
+    }
+
+    function loadTTSVoices() {
+        if (!abSpeechSynth) return;
+        abVoices = abSpeechSynth.getVoices();
+        if (!abVoices || abVoices.length === 0) return;
+
+        abVoiceSelect.innerHTML = '';
+        
+        // Priorizar voces en español
+        const esVoices = abVoices.filter(v => v.lang.startsWith('es'));
+        const displayVoices = esVoices.length > 0 ? esVoices : abVoices;
+
+        displayVoices.forEach((voice, index) => {
+            const option = document.createElement('option');
+            option.value = voice.name;
+            option.textContent = `${voice.name} (${voice.lang})`;
+            if (voice.default || (index === 0 && esVoices.length > 0)) {
+                option.selected = true;
+            }
+            abVoiceSelect.appendChild(option);
+        });
+    }
+
+    function openAudiobookModal(type = 'chapter', index = 0) {
+        loadAudiobookTrack(type, index);
+        openModal('modal-audiobook');
+    }
+
+    function loadAudiobookTrack(type, index) {
+        stopAudiobookSpeech();
+
+        abCurrentTrackType = type;
+        abCurrentTrackIndex = index;
+        abTrackSelect.value = `${type}-${index}`;
+
+        if (type === 'chapter') {
+            const chap = NOVEL_DATA.chapters[index];
+            abTrackTitle.textContent = `Capítulo ${chap.id}: ${chap.title}`;
+            abTrackMeta.textContent = `${chap.act} • POV: ${chap.pov} • ${chap.location}`;
+            abCoverImg.src = chap.povImage || 'cover.png';
+
+            // Extraer párrafos limpios del contenido del capítulo
+            const cleanText = chap.content.replace(/^#+.*$/gm, '').replace(/!\[.*?\]\(.*?\)/g, '');
+            abParagraphs = cleanText.split(/\n\n+/).map(p => p.replace(/[\*#_`]/g, '').trim()).filter(p => p.length > 5);
+        } else {
+            const bio = abParsedBios[index];
+            abTrackTitle.textContent = `Biografía: ${bio.fullName}`;
+            abTrackMeta.textContent = `Perfil de Personaje • Lore Oficial`;
+            abCoverImg.src = bio.coverImage;
+            abParagraphs = bio.paragraphs;
+        }
+
+        abActiveParagraphIndex = 0;
+        renderAudiobookTranscript();
+        updateAudiobookProgressUI();
+    }
+
+    function renderAudiobookTranscript() {
+        abTranscriptBody.innerHTML = '';
+        abParagraphs.forEach((pText, pIdx) => {
+            const pEl = document.createElement('div');
+            pEl.className = 'transcript-paragraph';
+            if (pIdx === abActiveParagraphIndex) pEl.classList.add('active-speaking-paragraph');
+            pEl.textContent = pText;
+
+            pEl.addEventListener('click', () => {
+                abActiveParagraphIndex = pIdx;
+                playAudiobookParagraph(pIdx);
+            });
+
+            abTranscriptBody.appendChild(pEl);
+        });
+    }
+
+    function togglePlayPauseAudiobook() {
+        if (abIsPlaying) {
+            pauseAudiobook();
+        } else {
+            playAudiobook();
+        }
+    }
+
+    function playAudiobook() {
+        abIsPlaying = true;
+        abPlayIcon.textContent = '⏸';
+        abEqualizer.classList.remove('hidden');
+
+        // Activar el Sintetizador Sonoro de Fondo según el perfil seleccionado
+        const profile = abVocalProfile ? abVocalProfile.value : 'dramatic';
+        const preset = abSoundscapePreset ? abSoundscapePreset.value : 'auto';
+        const activeSound = preset !== 'auto' ? preset : profile;
+        applyWebAudioSoundscape(activeSound);
+
+        playAudiobookParagraph(abActiveParagraphIndex);
+    }
+
+    function pauseAudiobook() {
+        abIsPlaying = false;
+        abPlayIcon.textContent = '▶';
+        abEqualizer.classList.add('hidden');
+        stopAudiobookSpeech();
+        stopWebAudioSoundscape();
+        abStatusText.textContent = 'Pausado';
+    }
+
+    function stopAudiobookSpeech() {
+        if (abSpeechSynth) abSpeechSynth.cancel();
+    }
+
+    function playAudiobookParagraph(pIdx) {
+        if (pIdx < 0 || pIdx >= abParagraphs.length) {
+            pauseAudiobook();
+            abStatusText.textContent = 'Fin del track';
+            return;
+        }
+
+        stopAudiobookSpeech();
+
+        abActiveParagraphIndex = pIdx;
+        updateAudiobookProgressUI();
+
+        // Destacar el párrafo en la transcripción
+        const pEls = abTranscriptBody.querySelectorAll('.transcript-paragraph');
+        pEls.forEach((el, i) => {
+            if (i === pIdx) {
+                el.classList.add('active-speaking-paragraph');
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                el.classList.remove('active-speaking-paragraph');
+            }
+        });
+
+        const textToSpeak = abParagraphs[pIdx];
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+
+        // Seleccionar Voz TTS
+        const selectedVoiceName = abVoiceSelect ? abVoiceSelect.value : '';
+        if (selectedVoiceName && abVoices.length > 0) {
+            const vObj = abVoices.find(v => v.name === selectedVoiceName);
+            if (vObj) utterance.voice = vObj;
+        }
+
+        // Aplicar Perfil Vocal y Prosodia Dramática (Pitch & Rate modulation)
+        const profile = abVocalProfile ? abVocalProfile.value : 'dramatic';
+        let baseRate = parseFloat(abSpeedSelect.value) || 0.9;
+        let basePitch = 1.0;
+
+        if (profile === 'dramatic') {
+            basePitch = 0.85; // Voz más grave y teatral de thriller
+            baseRate = baseRate * 0.95;
+        } else if (profile === 'cole') {
+            basePitch = 1.05; // POV Cole Vance (joven, analítico)
+            baseRate = baseRate * 1.0;
+        } else if (profile === 'maya') {
+            basePitch = 1.15; // POV Maya Lin (periodista, decidida)
+            baseRate = baseRate * 1.05;
+        } else if (profile === 'bob') {
+            basePitch = 0.72; // BOB el Robot (sintético profundo)
+            baseRate = baseRate * 0.88;
+        } else if (profile === 'thomas') {
+            basePitch = 0.80; // Padre Thomas (solemne, grave)
+            baseRate = baseRate * 0.85;
+        } else if (profile === 'aura') {
+            basePitch = 1.20; // AURA / ASI (cristalina superinteligencia)
+            baseRate = baseRate * 0.95;
+        }
+
+        utterance.pitch = Math.max(0.5, Math.min(1.5, basePitch));
+        utterance.rate = Math.max(0.5, Math.min(2.0, baseRate));
+
+        utterance.onend = () => {
+            if (abIsPlaying) {
+                if (abActiveParagraphIndex < abParagraphs.length - 1) {
+                    playAudiobookParagraph(abActiveParagraphIndex + 1);
+                } else {
+                    pauseAudiobook();
+                    abStatusText.textContent = 'Pista completada';
+                }
+            }
+        };
+
+        utterance.onerror = (e) => {
+            console.warn('TTS Speech Error:', e);
+            pauseAudiobook();
+        };
+
+        abCurrentUtterance = utterance;
+        abSpeechSynth.speak(utterance);
+        abStatusText.textContent = `Narrando [${profile.toUpperCase()}] (${utterance.rate.toFixed(2)}x)...`;
+    }
+
+    function skipAudiobookParagraph(delta) {
+        const nextIdx = abActiveParagraphIndex + delta;
+        if (nextIdx >= 0 && nextIdx < abParagraphs.length) {
+            playAudiobookParagraph(nextIdx);
+        }
+    }
+
+    function updateAudiobookProgressUI() {
+        const total = abParagraphs.length;
+        const current = abActiveParagraphIndex + 1;
+        abCurrentTime.textContent = `Párrafo ${current} / ${total}`;
+        const pct = total > 0 ? (current / total) * 100 : 0;
+        abProgressBar.style.width = `${pct}%`;
+    }
+
+    /* --- SINTETIZADOR WEB AUDIO API PARA SOUNDSCAPES Y AMBIENTE --- */
+    let soundscapeCtx = null;
+    let soundscapeNodes = [];
+
+    function applyWebAudioSoundscape(profileName) {
+        stopWebAudioSoundscape();
+
+        if (!soundscapeCtx) {
+            soundscapeCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (soundscapeCtx.state === 'suspended') {
+            soundscapeCtx.resume();
+        }
+
+        const masterGain = soundscapeCtx.createGain();
+        const volVal = abAmbientVol ? parseFloat(abAmbientVol.value) : 0.25;
+        masterGain.gain.setValueAtTime(volVal * 0.18, soundscapeCtx.currentTime);
+        masterGain.connect(soundscapeCtx.destination);
+
+        if (profileName === 'dramatic') {
+            // Drone sub-bass cinematográfico (55Hz sine + 110Hz triangle)
+            const osc1 = soundscapeCtx.createOscillator();
+            const osc2 = soundscapeCtx.createOscillator();
+            const filter = soundscapeCtx.createBiquadFilter();
+
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(55, soundscapeCtx.currentTime);
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(110, soundscapeCtx.currentTime);
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(140, soundscapeCtx.currentTime);
+
+            osc1.connect(filter);
+            osc2.connect(filter);
+            filter.connect(masterGain);
+
+            osc1.start();
+            osc2.start();
+            soundscapeNodes.push(osc1, osc2, filter, masterGain);
+
+        } else if (profileName === 'bob') {
+            // Zumbido cibernético robótico (110Hz sawtooth + LFO de modulación de frecuencia)
+            const osc = soundscapeCtx.createOscillator();
+            const lfo = soundscapeCtx.createOscillator();
+            const filter = soundscapeCtx.createBiquadFilter();
+            const lfoGain = soundscapeCtx.createGain();
+
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(110, soundscapeCtx.currentTime);
+
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(600, soundscapeCtx.currentTime);
+            filter.Q.setValueAtTime(5, soundscapeCtx.currentTime);
+
+            lfo.type = 'sine';
+            lfo.frequency.setValueAtTime(4, soundscapeCtx.currentTime);
+            lfoGain.gain.setValueAtTime(200, soundscapeCtx.currentTime);
+
+            lfo.connect(lfoGain);
+            lfoGain.connect(filter.frequency);
+            osc.connect(filter);
+            filter.connect(masterGain);
+
+            osc.start();
+            lfo.start();
+            soundscapeNodes.push(osc, lfo, filter, lfoGain, masterGain);
+
+        } else if (profileName === 'aura') {
+            // Acorde flotante harmónico de superinteligencia (220Hz + 440Hz + 660Hz)
+            const osc1 = soundscapeCtx.createOscillator();
+            const osc2 = soundscapeCtx.createOscillator();
+            const osc3 = soundscapeCtx.createOscillator();
+            const filter = soundscapeCtx.createBiquadFilter();
+
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(220, soundscapeCtx.currentTime);
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(440, soundscapeCtx.currentTime);
+            osc3.type = 'sine';
+            osc3.frequency.setValueAtTime(660, soundscapeCtx.currentTime);
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(800, soundscapeCtx.currentTime);
+
+            osc1.connect(filter);
+            osc2.connect(filter);
+            osc3.connect(filter);
+            filter.connect(masterGain);
+
+            osc1.start();
+            osc2.start();
+            osc3.start();
+            soundscapeNodes.push(osc1, osc2, osc3, filter, masterGain);
+
+        } else if (profileName === 'thomas' || profileName === 'catacombs') {
+            // Tono de órgano / catedral místico (130.81Hz + 196Hz)
+            const osc1 = soundscapeCtx.createOscillator();
+            const osc2 = soundscapeCtx.createOscillator();
+            const filter = soundscapeCtx.createBiquadFilter();
+
+            osc1.type = 'triangle';
+            osc1.frequency.setValueAtTime(130.81, soundscapeCtx.currentTime);
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(196, soundscapeCtx.currentTime);
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(320, soundscapeCtx.currentTime);
+
+            osc1.connect(filter);
+            osc2.connect(filter);
+            filter.connect(masterGain);
+
+            osc1.start();
+            osc2.start();
+            soundscapeNodes.push(osc1, osc2, filter, masterGain);
+
+        } else if (profileName === 'maya' || profileName === 'rain') {
+            // Lluvia urbana y ruido suavizado
+            const bufferSize = soundscapeCtx.sampleRate * 2;
+            const noiseBuffer = soundscapeCtx.createBuffer(1, bufferSize, soundscapeCtx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0;
+            for (let i = 0; i < bufferSize; i++) {
+                let white = Math.random() * 2 - 1;
+                b0 = 0.99886 * b0 + white * 0.0555179;
+                b1 = 0.99332 * b1 + white * 0.0750759;
+                b2 = 0.96900 * b2 + white * 0.1538520;
+                b3 = 0.86650 * b3 + white * 0.3104856;
+                b4 = 0.55000 * b4 + white * 0.5329522;
+                b5 = -0.7616 * b5 - white * 0.0168980;
+                output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + white * 0.5362) * 0.08;
+            }
+
+            const whiteNoise = soundscapeCtx.createBufferSource();
+            whiteNoise.buffer = noiseBuffer;
+            whiteNoise.loop = true;
+
+            const filter = soundscapeCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(380, soundscapeCtx.currentTime);
+
+            whiteNoise.connect(filter);
+            filter.connect(masterGain);
+            whiteNoise.start();
+            soundscapeNodes.push(whiteNoise, filter, masterGain);
+        }
+    }
+
+    function stopWebAudioSoundscape() {
+        soundscapeNodes.forEach(node => {
+            try {
+                if (node.stop) node.stop();
+                if (node.disconnect) node.disconnect();
+            } catch (e) {}
+        });
+        soundscapeNodes = [];
+    }
+});
+

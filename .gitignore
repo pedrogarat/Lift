@@ -1,0 +1,31 @@
+# --- Antigravity Sincronización ---
+# Permitimos la sincronización de las personalizaciones de Antigravity (.agents/)
+!.agents/
+!.agents/**/*
+
+# Ignoramos configuraciones locales específicas de la máquina en .vscode/
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/workspaceState.json
+.vscode/tasks.json
+
+# Ignoramos logs de Antigravity o variables de entorno locales
+.env
+.env.local
+.env.*.local
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignoramos temporales del sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Ignoramos dependencias de node en caso de expandir el proyecto
+node_modules/
+dist/
+build/
+.cache/

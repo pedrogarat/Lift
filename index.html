@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="obsidian" data-font="serif">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>808: La Paradoja de AURA | Novela Interactiva</title>
+    <meta name="description" content="Lector oficial de 808: La Paradoja de AURA. Una novela sci-fi / thriller tecnológico sobre superinteligencia artificial, resistencia y amor trascendente.">
+    
+    <!-- Fuentes de Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Barra de progreso superior de lectura -->
+    <div id="progress-bar-container" class="progress-bar-container">
+        <div id="progress-bar" class="progress-bar"></div>
+    </div>
+
+    <!-- Contenedor Principal de la App -->
+    <div class="app-layout">
+        
+        <!-- Header de Navegación -->
+        <header class="app-header">
+            <div class="header-left">
+                <button id="btn-toggle-sidebar" class="icon-btn" title="Abrir Índice de Capítulos" aria-label="Índice">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+                </button>
+                <div class="brand">
+                    <span class="brand-logo">⚡</span>
+                    <div class="brand-text">
+                        <span class="brand-title">808</span>
+                        <span class="brand-subtitle">LA PARADOJA DE AURA</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-center">
+                <span id="header-chapter-indicator" class="chapter-pill">Capítulo 1 de 12</span>
+            </div>
+
+            <div class="header-right">
+                <button id="btn-open-search" class="icon-btn" title="Buscar en la novela (Ctrl+F)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <span class="btn-label">Buscar</span>
+                </button>
+                
+                <button id="btn-open-codex" class="icon-btn" title="Ver Personajes y Lore">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                    <span class="btn-label">Personajes</span>
+                </button>
+
+                <button id="btn-open-escaleta" class="icon-btn" title="Ver Escaleta de 3 Actos">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    <span class="btn-label">Escaleta</span>
+                </button>
+
+                <button id="btn-open-settings" class="icon-btn" title="Ajustes de Lectura">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <span class="btn-label">Ajustes</span>
+                </button>
+
+                <button id="btn-open-audiobook" class="icon-btn highlight-btn" title="Reproductor de Audiolibro (Narración e IA)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
+                    <span class="btn-label">Audiolibro</span>
+                </button>
+
+                <button id="btn-toggle-audio" class="icon-btn audio-btn" title="Ambiente Sonoro (Web Audio API)">
+                    <span id="audio-icon">🎶</span>
+                    <span class="btn-label">Ambiente</span>
+                </button>
+
+                <button id="btn-toggle-focus" class="icon-btn" title="Modo Enfoque / Pantalla Completa">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Sidebar / Cajón del Índice de Capítulos -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-cover">
+                    <img src="cover.png" alt="Portada 808: La Paradoja de AURA" class="sidebar-cover-img">
+                </div>
+                <div class="sidebar-info">
+                    <h3>808</h3>
+                    <p class="sidebar-stats">12 Capítulos &bull; ~95,5 Páginas &bull; 26.260 Palabras</p>
+                </div>
+                <button id="btn-close-sidebar" class="close-btn" aria-label="Cerrar">&times;</button>
+            </div>
+
+            <div class="sidebar-search-box">
+                <input type="text" id="sidebar-filter" placeholder="Filtrar capítulos por título o lugar...">
+            </div>
+
+            <div class="sidebar-nav-list" id="sidebar-chapters-list">
+                <!-- Se puebla dinámicamente -->
+            </div>
+        </aside>
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+        <!-- Área Principal de Lectura -->
+        <main class="reader-container">
+            <div id="reader-canvas" class="reader-canvas">
+                <!-- Encabezado dinámico del Capítulo -->
+                <div id="chapter-banner" class="chapter-banner">
+                    <div class="banner-header-grid">
+                        <div id="chapter-vignette" class="chapter-vignette">
+                            <img id="chapter-vignette-img" src="img/char_cole_vance.png" alt="Retrato POV del personaje">
+                        </div>
+                        <div class="banner-text-box">
+                            <div id="chapter-act-badge" class="act-badge">Acto I</div>
+                            <h1 id="chapter-main-title" class="chapter-title">Cargando novela...</h1>
+                        </div>
+                    </div>
+                    
+                    <div class="meta-row">
+                        <span id="meta-pov" class="meta-item">👁️ POV: Cole Vance</span>
+                        <span id="meta-location" class="meta-item">📍 Silicon Valley</span>
+                        <span id="meta-readtime" class="meta-item">⏱️ 9 min</span>
+                        <span id="meta-pages" class="meta-item">📄 ~8,8 páginas</span>
+                        <button id="btn-listen-chapter" class="audiobook-quick-listen-btn" title="Escuchar este capítulo en la sección Audiolibro">
+                            <span>🎧</span> Escuchar Audiolibro
+                        </button>
+                    </div>
+
+                    <!-- Acordeón de la Ficha de Escena (desplegable opcional) -->
+                    <details class="scene-fiche-card" id="scene-fiche">
+                        <summary class="fiche-summary">
+                            <span>📋 Ver Ficha de la Escena y Control de Coherencia</span>
+                            <span class="chevron">▼</span>
+                        </summary>
+                        <div id="scene-fiche-content" class="fiche-content">
+                            <!-- Se puebla desde el desglose -->
+                        </div>
+                    </details>
+                </div>
+
+                <!-- Cuerpo del Texto del Capítulo -->
+                <article id="chapter-body-content" class="chapter-body-content">
+                    <!-- Se renderiza dinámicamente -->
+                </article>
+
+                <!-- Navegación Inferior entre Capítulos -->
+                <nav class="reader-bottom-nav">
+                    <button id="btn-prev-chapter" class="nav-btn prev-btn">
+                        <span class="arrow">←</span>
+                        <div class="nav-text">
+                            <span class="sub">Capítulo Anterior</span>
+                            <span id="prev-chapter-title" class="title">-</span>
+                        </div>
+                    </button>
+
+                    <button id="btn-bookmark" class="bookmark-btn" title="Guardar posición actual">
+                        <span id="bookmark-icon">🔖</span>
+                        <span id="bookmark-text">Guardar Marcador</span>
+                    </button>
+
+                    <button id="btn-next-chapter" class="nav-btn next-btn">
+                        <div class="nav-text">
+                            <span class="sub">Capítulo Siguiente</span>
+                            <span id="next-chapter-title" class="title">-</span>
+                        </div>
+                        <span class="arrow">→</span>
+                    </button>
+                </nav>
+            </div>
+        </main>
+
+        <!-- Botón flotante para subir -->
+        <button id="btn-scroll-top" class="scroll-top-btn" title="Subir al inicio">↑</button>
+    </div>
+
+    <!-- MODAL 1: Ajustes de Lectura -->
+    <div id="modal-settings" class="modal-overlay hidden">
+        <div class="modal-box glass">
+            <div class="modal-header">
+                <h3>⚙️ Personalizar Lectura</h3>
+                <button class="close-btn" onclick="closeModal('modal-settings')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Selector de Tema -->
+                <div class="setting-group">
+                    <label>Paleta de Color / Tema:</label>
+                    <div class="theme-options">
+                        <button class="theme-btn active" data-theme="obsidian">
+                            <span class="dot obsidian-dot"></span>
+                            Obsidiana (Cyberpunk)
+                        </button>
+                        <button class="theme-btn" data-theme="sepia">
+                            <span class="dot sepia-dot"></span>
+                            Sepia Cálido
+                        </button>
+                        <button class="theme-btn" data-theme="night">
+                            <span class="dot night-dot"></span>
+                            Noche OLED
+                        </button>
+                        <button class="theme-btn" data-theme="light">
+                            <span class="dot light-dot"></span>
+                            Luz Solar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Selector de Fuente -->
+                <div class="setting-group">
+                    <label>Tipografía de Lectura:</label>
+                    <div class="font-options">
+                        <button class="font-btn active" data-font="serif">Serif (Cormorant Garamond)</button>
+                        <button class="font-btn" data-font="sans">Sans-Serif (Inter)</button>
+                        <button class="font-btn" data-font="mono">Monospace (JetBrains Mono)</button>
+                    </div>
+                </div>
+
+                <!-- Controles Deslizantes -->
+                <div class="setting-group">
+                    <div class="slider-row">
+                        <label for="slider-font-size">Tamaño de Letra: <span id="val-font-size">19px</span></label>
+                        <input type="range" id="slider-font-size" min="15" max="28" value="19">
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <div class="slider-row">
+                        <label for="slider-line-height">Interlineado: <span id="val-line-height">1.8</span></label>
+                        <input type="range" id="slider-line-height" min="1.4" max="2.2" step="0.1" value="1.8">
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <div class="slider-row">
+                        <label for="slider-text-width">Ancho de Lectura: <span id="val-text-width">800px</span></label>
+                        <input type="range" id="slider-text-width" min="600" max="1000" step="20" value="800">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Códice de Personajes y Lore -->
+    <div id="modal-codex" class="modal-overlay hidden">
+        <div class="modal-box modal-large glass">
+            <div class="modal-header">
+                <h3>📖 Base de Datos de Coherencia y Personajes</h3>
+                <button class="close-btn" onclick="closeModal('modal-codex')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="codex-content-rendered" class="markdown-rendered">
+                    <!-- Se puebla dinámicamente desde personajes.md -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: Escaleta de 3 Actos -->
+    <div id="modal-escaleta" class="modal-overlay hidden">
+        <div class="modal-box modal-large glass">
+            <div class="modal-header">
+                <h3>🗺️ Escaleta del Argumento (3 Actos / 12 Puntos)</h3>
+                <button class="close-btn" onclick="closeModal('modal-escaleta')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="escaleta-content-rendered" class="markdown-rendered">
+                    <!-- Se puebla dinámicamente desde escaleta.md -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: Buscador Global -->
+    <div id="modal-search" class="modal-overlay hidden">
+        <div class="modal-box glass">
+            <div class="modal-header">
+                <h3>🔍 Buscador en la Novela</h3>
+                <button class="close-btn" onclick="closeModal('modal-search')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="search-input-wrapper">
+                    <input type="text" id="global-search-input" placeholder="Escribe un personaje, concepto o frase (ej. BOB, VLF, Suiza)...">
+                </div>
+                <div id="search-results-list" class="search-results-list">
+                    <p class="search-placeholder">Introduce al menos 2 caracteres para comenzar a buscar.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 5: Reproductor de Audiolibro Interactiva -->
+    <div id="modal-audiobook" class="modal-overlay hidden">
+        <div class="modal-box modal-xlarge glass audiobook-modal-box">
+            <div class="modal-header audiobook-modal-header">
+                <div class="audiobook-header-title">
+                    <span class="audiobook-badge">AUDIOBOOK PLAYER</span>
+                    <h3>🎧 Reproductor de Audiolibro & Narrador IA</h3>
+                </div>
+                <button class="close-btn" onclick="closeModal('modal-audiobook')">&times;</button>
+            </div>
+            
+            <div class="modal-body audiobook-body-grid">
+                <!-- Columna Izquierda: Reproductor Principal y Controles -->
+                <div class="audiobook-player-card">
+                    <div class="audiobook-cover-container">
+                        <img id="ab-cover-img" src="cover.png" alt="Carátula Audiolibro" class="ab-cover-img">
+                        <div id="ab-equalizer" class="ab-equalizer hidden">
+                            <div class="eq-bar"></div>
+                            <div class="eq-bar"></div>
+                            <div class="eq-bar"></div>
+                            <div class="eq-bar"></div>
+                            <div class="eq-bar"></div>
+                        </div>
+                    </div>
+
+                    <div class="ab-track-info">
+                        <h4 id="ab-track-title">Capítulo 1: El Espejismo del Orden</h4>
+                        <p id="ab-track-meta">Acto I &bull; POV: Cole Vance &bull; Silicon Valley</p>
+                    </div>
+
+                    <!-- Selector de Pista / Capítulo / Biografías -->
+                    <div class="ab-selector-wrapper">
+                        <label for="ab-track-select">Seleccionar Contenido:</label>
+                        <select id="ab-track-select" class="ab-select-input">
+                            <optgroup label="📖 Capítulos de la Novela" id="ab-optgroup-chapters">
+                                <!-- Se puebla dinámicamente -->
+                            </optgroup>
+                            <optgroup label="👤 Biografías de Personajes" id="ab-optgroup-bios">
+                                <!-- Se puebla dinámicamente -->
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <!-- Barra de Progreso del Reproductor -->
+                    <div class="ab-progress-wrapper">
+                        <div class="ab-time-row">
+                            <span id="ab-current-time">Párrafo 1 / --</span>
+                            <span id="ab-status-text">Listo para reproducir</span>
+                        </div>
+                        <div id="ab-progress-container" class="ab-progress-container" title="Progreso de lectura del texto">
+                            <div id="ab-progress-bar" class="ab-progress-bar"></div>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Control de Reproducción -->
+                    <div class="ab-controls-row">
+                        <button id="ab-btn-prev" class="ab-control-btn" title="Pista Anterior">⏮</button>
+                        <button id="ab-btn-rewind" class="ab-control-btn" title="Párrafo Anterior">⏪</button>
+                        <button id="ab-btn-play" class="ab-control-btn play-main-btn" title="Reproducir / Pausar">
+                            <span id="ab-play-icon">▶</span>
+                        </button>
+                        <button id="ab-btn-forward" class="ab-control-btn" title="Párrafo Siguiente">⏩</button>
+                        <button id="ab-btn-next" class="ab-control-btn" title="Pista Siguiente">⏭</button>
+                    </div>
+
+                    <!-- Ajustes de Voz, Velocidad, Perfil Dramático y Música de Fondo -->
+                    <div class="ab-settings-card">
+                        <div class="ab-setting-item">
+                            <label for="ab-source-mode">Origen del Audio / Motor:</label>
+                            <select id="ab-source-mode" class="ab-select-input">
+                                <option value="auto" selected>🎙️ Audio MP3 Estudio (con Fallback a Narrador IA)</option>
+                                <option value="tts">🤖 Narrador IA con Efectos Dramáticos FX</option>
+                            </select>
+                        </div>
+
+                        <div class="ab-setting-item">
+                            <label for="ab-vocal-profile">Perfil Vocal & Tono de Personaje:</label>
+                            <select id="ab-vocal-profile" class="ab-select-input">
+                                <option value="dramatic" selected>🎭 Narrador de Thriller / Cine (Grave, profundo, pausado)</option>
+                                <option value="cole">👤 POV Cole Vance (Técnico, joven, articulado)</option>
+                                <option value="maya">👤 POV Maya Lin (Periodista, decidida, rápida)</option>
+                                <option value="bob">🤖 BOB el Robot (Sintetizador metálico y procesado)</option>
+                                <option value="thomas">⛪ Padre Thomas (Solemne, cálido con resonancia)</option>
+                                <option value="aura">⚡ AURA / ASI (Cristalina, impecable con eco espacial)</option>
+                            </select>
+                        </div>
+
+                        <div class="ab-setting-item">
+                            <label for="ab-voice-select">Voz TTS del Sistema:</label>
+                            <select id="ab-voice-select" class="ab-select-input">
+                                <option value="">Español (Predeterminada del sistema)</option>
+                            </select>
+                        </div>
+
+                        <div class="ab-setting-row-2col">
+                            <div class="ab-setting-item">
+                                <label for="ab-speed-select">Velocidad:</label>
+                                <select id="ab-speed-select" class="ab-select-input">
+                                    <option value="0.75">0.75x (Teatral)</option>
+                                    <option value="0.9" selected>0.90x (Cinematográfico)</option>
+                                    <option value="1">1.0x (Normal)</option>
+                                    <option value="1.2">1.2x (Fluido)</option>
+                                </select>
+                            </div>
+                            <div class="ab-setting-item">
+                                <label for="ab-soundscape-preset">Soundscape / Ambiente:</label>
+                                <select id="ab-soundscape-preset" class="ab-select-input">
+                                    <option value="auto" selected>📍 Adaptativo (Ubicación)</option>
+                                    <option value="cyber">🏙️ Silicon Valley</option>
+                                    <option value="rain">🌧️ Lluvia en Tokio</option>
+                                    <option value="catacombs">⛪ Catacumbas Roma</option>
+                                    <option value="ocean">🌊 Mar del Norte</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="ab-setting-item">
+                            <label for="ab-ambient-vol">Música de Ambiente Sci-Fi & Soundscape:</label>
+                            <div class="vol-slider-row">
+                                <span>🔈</span>
+                                <input type="range" id="ab-ambient-vol" min="0" max="1" step="0.05" value="0.25">
+                                <span>🔊</span>
+                            </div>
+                        </div>
+
+                        <div class="ab-upload-hint-card">
+                            <span>💡 <strong>Audio Profesional MP3:</strong> Coloca tus archivos de voz en <code>audio/capitulo_1.mp3</code> para reproducir narraciones grabadas o de ElevenLabs.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna Derecha: Lectura Sincronizada y Subtítulos -->
+                <div class="audiobook-transcript-card">
+                    <div class="transcript-header">
+                        <h4>📜 Transcripción en Vivo</h4>
+                        <span class="transcript-hint">Haz clic en cualquier párrafo para saltar la narración</span>
+                    </div>
+                    <div id="ab-transcript-body" class="transcript-body">
+                        <!-- Párrafos interactivos renderizados dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cargar Datos y Lógica de la App -->
+    <script src="chapters-data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
