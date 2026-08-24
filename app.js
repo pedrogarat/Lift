@@ -46,6 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnOpenSettings = document.getElementById('btn-open-settings');
     const btnOpenCodex = document.getElementById('btn-open-codex');
     const btnOpenEscaleta = document.getElementById('btn-open-escaleta');
+    const btnOpenGenesis = document.getElementById('btn-open-genesis');
+    const btnCloseGenesis = document.getElementById('btn-close-genesis');
     const btnOpenSearch = document.getElementById('btn-open-search');
     const btnOpenAudiobook = document.getElementById('btn-open-audiobook');
     const btnListenChapter = document.getElementById('btn-listen-chapter');
@@ -144,6 +146,12 @@ document.addEventListener('DOMContentLoaded', () => {
         btnOpenSettings.addEventListener('click', () => openModal('modal-settings'));
         btnOpenCodex.addEventListener('click', () => openModal('modal-codex'));
         btnOpenEscaleta.addEventListener('click', () => openModal('modal-escaleta'));
+        if (btnOpenGenesis) {
+            btnOpenGenesis.addEventListener('click', () => openModal('modal-genesis'));
+        }
+        if (btnCloseGenesis) {
+            btnCloseGenesis.addEventListener('click', () => closeModal('modal-genesis'));
+        }
         btnOpenSearch.addEventListener('click', () => {
             openModal('modal-search');
             globalSearchInput.focus();
@@ -411,9 +419,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const genesisContentRendered = document.getElementById('genesis-content');
+
     function renderCodexAndEscaleta() {
         codexContentRendered.innerHTML = renderMarkdown(NOVEL_DATA.personajesRaw);
         escaletaContentRendered.innerHTML = renderMarkdown(NOVEL_DATA.escaletaRaw);
+        if (genesisContentRendered && NOVEL_DATA.genesisRaw) {
+            genesisContentRendered.innerHTML = renderMarkdown(NOVEL_DATA.genesisRaw);
+        }
     }
 
     // --- MARCADOR Y PROGRESO ---

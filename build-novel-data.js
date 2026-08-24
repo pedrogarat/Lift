@@ -62,9 +62,13 @@ for (let i = 1; i <= 12; i++) {
   });
 }
 
+const genesisPath = path.join(novelaDir, 'genesis.md');
+const genesisText = fs.existsSync(genesisPath) ? fs.readFileSync(genesisPath, 'utf-8') : '';
+
 const novelData = {
   title: "808",
   subtitle: "La Paradoja de AURA",
+  director: "Pedro Garat",
   author: "",
   coverImage: "cover.png",
   totalChapters: 12,
@@ -73,6 +77,7 @@ const novelData = {
   personajesRaw: personajesText,
   biografiasRaw: biografiasText,
   escaletaRaw: escaletaText,
+  genesisRaw: genesisText,
   chapters: chapters
 };
 
