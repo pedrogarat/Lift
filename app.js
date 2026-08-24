@@ -109,20 +109,25 @@ document.addEventListener('DOMContentLoaded', () => {
     initApp();
 
     function initApp() {
-        loadPreferences();
-        renderSidebarList();
-        renderCodexAndEscaleta();
-        initAudiobook();
+        try { loadPreferences(); } catch(e) { console.error('Error in loadPreferences:', e); }
+        try { renderSidebarList(); } catch(e) { console.error('Error in renderSidebarList:', e); }
+        try { renderCodexAndEscaleta(); } catch(e) { console.error('Error in renderCodexAndEscaleta:', e); }
+        try { initAudiobook(); } catch(e) { console.error('Error in initAudiobook:', e); }
 
         // Cargar marcador o capítulo 0
-        if (bookmark && bookmark.chapterIndex !== undefined && bookmark.chapterIndex >= 0 && bookmark.chapterIndex < NOVEL_DATA.chapters.length) {
-            loadChapter(bookmark.chapterIndex, bookmark.scrollTop);
-        } else {
+        try {
+            if (bookmark && bookmark.chapterIndex !== undefined && bookmark.chapterIndex >= 0 && bookmark.chapterIndex < NOVEL_DATA.chapters.length) {
+                loadChapter(bookmark.chapterIndex, bookmark.scrollTop);
+            } else {
+                loadChapter(0);
+            }
+        } catch(e) {
+            console.error('Error loading chapter, falling back to chapter 0:', e);
             loadChapter(0);
         }
 
-        setupEventListeners();
-        updateProgressBar();
+        try { setupEventListeners(); } catch(e) { console.error('Error in setupEventListeners:', e); }
+        try { updateProgressBar(); } catch(e) { console.error('Error in updateProgressBar:', e); }
     }
 
     // --- MANEJADOR DE EVENTOS GENERAL ---
@@ -378,16 +383,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderMarkdown(md) {
         if (!md) return '';
-        let html = md.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1">');
-        html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-        html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-        html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-        html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
-        html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
-        html = html.replace(/\n\n/g, '<br><br>');
-        return html;
+        try {
+            let html = md.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1">');
+            html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+            html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+            html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
+            html = html.replace(/\n\n/g, '<br><br>');
+            return html;
+        } catch (e) {
+            console.error('Error rendering markdown:', e);
+            return md;
+        }
     }
 
     // --- RENDERIZAR SIDEBAR Y CODICES ---
