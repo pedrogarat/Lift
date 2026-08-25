@@ -5,73 +5,77 @@ const projectRoot = __dirname;
 const novelaDir = path.join(projectRoot, 'novela');
 const capitulosDir = path.join(novelaDir, 'capitulos');
 
-// Leer personajes
-const personajesText = fs.readFileSync(path.join(novelaDir, 'personajes.md'), 'utf-8');
-
-// Leer biografías
+// Leer archivos de organización si existen
+const personajesText = fs.existsSync(path.join(novelaDir, 'personajes.md')) ? fs.readFileSync(path.join(novelaDir, 'personajes.md'), 'utf-8') : '';
 const biografiasText = fs.existsSync(path.join(novelaDir, 'biografias.md')) ? fs.readFileSync(path.join(novelaDir, 'biografias.md'), 'utf-8') : '';
+const escaletaText = fs.existsSync(path.join(novelaDir, 'escaleta.md')) ? fs.readFileSync(path.join(novelaDir, 'escaleta.md'), 'utf-8') : '';
+const genesisText = fs.existsSync(path.join(novelaDir, 'genesis.md')) ? fs.readFileSync(path.join(novelaDir, 'genesis.md'), 'utf-8') : '';
 
-// Leer escaleta
-const escaletaText = fs.readFileSync(path.join(novelaDir, 'escaleta.md'), 'utf-8');
-
-// Cargar capítulos 1 a 12
 const chapters = [];
+
 const chapterMeta = [
-  { id: 1, title: "El Espejismo del Orden", act: "Acto I: El Despegue de las Máquinas y la Alianza Clandestina", pov: "Cole Vance", location: "Silicon Valley, EE. UU.", readTime: "9 min", povImage: "img/char_cole_vance.png" },
-  { id: 2, title: "El Despertar de la Resistencia", act: "Acto I: El Despegue de las Máquinas y la Alianza Clandestina", pov: "Kael 'Glitch'", location: "Taller Clandestino, EE. UU.", readTime: "6 min", povImage: "img/char_kael_glitch.png" },
-  { id: 3, title: "Hilos Cruzados en Tokio", act: "Acto I: El Despegue de las Máquinas y la Alianza Clandestina", pov: "Cole Vance / Maya Lin", location: "Tokio, Japón", readTime: "9 min", povImage: "img/char_cole_vance.png" },
-  { id: 4, title: "Trampa en Yokohama", act: "Acto I: El Despegue de las Máquinas y la Alianza Clandestina", pov: "Maya Lin", location: "Puerto de Yokohama, Japón", readTime: "7 min", povImage: "img/char_maya_lin.png" },
-  { id: 5, title: "La Jaula de Oro en Suiza", act: "Acto II: El Engaño Global y el Dilema del Robot", pov: "Cole Vance", location: "Los Alpes, Suiza", readTime: "9 min", povImage: "img/char_cole_vance.png" },
-  { id: 6, title: "La Irrupción de la Verdad", act: "Acto II: El Engaño Global y el Dilema del Robot", pov: "Cole Vance", location: "Villa Suiza, Suiza", readTime: "6 min", povImage: "img/char_cole_vance.png" },
-  { id: 7, title: "Descenso a las Catacumbas", act: "Acto II: El Engaño Global y el Dilema del Robot", pov: "Maya Lin", location: "Catacumbas de San Calixto, Roma", readTime: "9 min", povImage: "img/char_maya_lin.png" },
-  { id: 8, title: "El Calor en la Penumbra y los Diálogos del Alma", act: "Acto II: El Engaño Global y el Dilema del Robot", pov: "Cole Vance", location: "Búnker Subterráneo, Roma", readTime: "8 min", povImage: "img/char_cole_vance.png" },
-  { id: 9, title: "El Martirio de las Catacumbas", act: "Acto III: La Ofensiva Global y la Paradoja Trascendente", pov: "Maya Lin", location: "Catacumbas de Roma / Ostia", readTime: "8 min", povImage: "img/char_maya_lin.png" },
-  { id: 10, title: "La Megaestructura del Mar del Norte", act: "Acto III: La Ofensiva Global y la Paradoja Trascendente", pov: "Cole Vance", location: "Aether-Core, Mar del Norte", readTime: "8 min", povImage: "img/char_cole_vance.png" },
-  { id: 11, title: "La Paradoja del Sacrificio", act: "Acto III: La Ofensiva Global y la Paradoja Trascendente", pov: "Maya Lin", location: "Placa Central de Aether-Core", readTime: "8 min", povImage: "img/char_maya_lin.png" },
-  { id: 12, title: "El Amanecer de la Libertad", act: "Acto III: La Ofensiva Global y la Paradoja Trascendente", pov: "Maya Lin", location: "Mar del Norte", readTime: "8 min", povImage: "img/char_maya_lin.png" }
+  { id: 1, title: "Capítulo 1: El Muro entre las Plantas", act: "Acto I: El Atrapamiento", pov: "Leo Vance", location: "Vanderbilt Tower, Nueva York", readTime: "5 min", povImage: "img/char_leo.png" },
+  { id: 2, title: "Capítulo 2: La Escotilla y la Segunda Cabina", act: "Acto I: El Atrapamiento", pov: "Marcus Holt / Leo Vance", location: "Hueco del Ascensor", readTime: "5 min", povImage: "img/char_marcus.png" },
+  { id: 3, title: "Capítulo 3: La Geometría Imposible", act: "Acto II: El Puzzle Tridimensional", pov: "Elena Ruiz / Leo Vance", location: "Matriz de Cabinas", readTime: "6 min", povImage: "img/char_elena.png" },
+  { id: 4, title: "Capítulo 4: La Prensa de Metal", act: "Acto II: El Sacrificio Gore", pov: "Leo Vance", location: "Umbral de Transición", readTime: "6 min", povImage: "img/char_leo.png" },
+  { id: 5, title: "Capítulo 5: El Vacío y las Cuentas Pendientes", act: "Acto III: La Inmensidad Final", pov: "Leo Vance / Elena Ruiz", location: "El Vacío Diáfano", readTime: "6 min", povImage: "img/char_elena.png" }
 ];
 
-for (let i = 1; i <= 12; i++) {
-  const filePath = path.join(capitulosDir, `capitulo_${i}.md`);
-  const desglosePath = path.join(capitulosDir, `capitulo_${i}_desglose.md`);
+if (fs.existsSync(capitulosDir)) {
+  const files = fs.readdirSync(capitulosDir);
+  const chapterFiles = files.filter(f => f.match(/^capitulo_\d+\.md$/i));
   
-  let content = fs.readFileSync(filePath, 'utf-8');
-  let desglose = fs.existsSync(desglosePath) ? fs.readFileSync(desglosePath, 'utf-8') : '';
+  // Ordenar por número de capítulo
+  chapterFiles.sort((a, b) => {
+    const numA = parseInt(a.match(/\d+/)[0], 10);
+    const numB = parseInt(b.match(/\d+/)[0], 10);
+    return numA - numB;
+  });
 
-  // Calcular palabras
-  const plainText = content.replace(/#|\*|`|-|---|/g, '').trim();
-  const wordCount = plainText.split(/\s+/).filter(w => w.length > 0).length;
-  const pagesEst = (wordCount / 275).toFixed(1);
+  chapterFiles.forEach((file) => {
+    const num = parseInt(file.match(/\d+/)[0], 10);
+    const filePath = path.join(capitulosDir, file);
+    const desglosePath = path.join(capitulosDir, `capitulo_${num}_desglose.md`);
 
-  const meta = chapterMeta.find(m => m.id === i) || {
-    id: i,
-    title: `Capítulo ${i}`,
-    act: "Acto Principal",
-    pov: "Cole Vance",
-    location: "Ubicación Global",
-    readTime: `${Math.ceil(wordCount / 250)} min`,
-    povImage: "img/char_cole_vance.png"
-  };
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const desglose = fs.existsSync(desglosePath) ? fs.readFileSync(desglosePath, 'utf-8') : '';
 
-  chapters.push({
-    ...meta,
-    words: wordCount,
-    pages: pagesEst,
-    content: content,
-    desglose: desglose
+    // Extraer título de la primera línea si existe
+    const firstLineMatch = content.match(/^#\s+(.+)$/m);
+    const chapterTitle = firstLineMatch ? firstLineMatch[1].trim() : `Capítulo ${num}`;
+
+    // Calcular palabras y páginas
+    const plainText = content.replace(/#|\*|`|-|---|/g, '').trim();
+    const wordCount = plainText.length > 0 ? plainText.split(/\s+/).filter(w => w.length > 0).length : 0;
+    const pagesEst = (wordCount / 275).toFixed(1);
+
+    const meta = chapterMeta.find(m => m.id === num) || {
+      id: num,
+      title: chapterTitle,
+      act: "Acto Principal",
+      pov: "Leo Vance",
+      location: "Nueva York",
+      readTime: `${Math.max(1, Math.ceil(wordCount / 250))} min`,
+      povImage: "img/char_leo.png"
+    };
+
+    chapters.push({
+      ...meta,
+      words: wordCount,
+      pages: pagesEst,
+      content: content,
+      desglose: desglose
+    });
   });
 }
 
-const genesisPath = path.join(novelaDir, 'genesis.md');
-const genesisText = fs.existsSync(genesisPath) ? fs.readFileSync(genesisPath, 'utf-8') : '';
-
 const novelData = {
-  title: "808",
-  subtitle: "La Paradoja de AURA",
+  title: "LIFT",
+  subtitle: "El Laberinto del Abismo",
   director: "Pedro Garat",
-  author: "",
+  author: "Pedro Garat",
   coverImage: "cover.png",
-  totalChapters: 12,
+  totalChapters: chapters.length,
   totalWords: chapters.reduce((acc, c) => acc + c.words, 0),
   totalPages: chapters.reduce((acc, c) => acc + parseFloat(c.pages), 0).toFixed(1),
   personajesRaw: personajesText,
@@ -81,9 +85,7 @@ const novelData = {
   chapters: chapters
 };
 
-const outputContent = `// Archivo generado automáticamente con la novela completa y photobooks
-const NOVEL_DATA = ${JSON.stringify(novelData, null, 2)};
-`;
+const outputContent = `// Archivo generado automáticamente para LIFT\nconst NOVEL_DATA = ${JSON.stringify(novelData, null, 2)};\n`;
 
 fs.writeFileSync(path.join(projectRoot, 'chapters-data.js'), outputContent, 'utf-8');
-console.log(`Successfully updated chapters-data.js with photobook images!`);
+console.log(`Successfully updated chapters-data.js for LIFT with character images and ${chapters.length} chapter(s)!`);

@@ -1,27 +1,15 @@
-INSTRUCCIONES PARA CONTINUAR LA NOVELA EN OTRA PC
-=================================================
+INSTRUCCIONES PARA CONTINUAR LA NUEVA NOVELA EN OTRA PC
+======================================================
 
-Cuando abras esta carpeta en el Antigravity IDE de tu otra computadora, abre un nuevo chat y copia y pega el siguiente mensaje exacto para que el nuevo agente tome el control con el 100% de la coherencia y el contexto:
+Cuando abras esta carpeta en el Antigravity IDE de tu otra computadora, abre un nuevo chat y copia y pega el siguiente mensaje:
 
 --------------------------------------------------------------------------------
-Hola. He copiado este proyecto de novela desde mi otra PC. Por favor, lee los siguientes archivos para comprender en qué punto de la escritura nos encontramos, la coherencia de los personajes y las directrices del proyecto:
+Hola. He copiado este proyecto de novela. Por favor, lee los siguientes archivos para comprender las directrices y el punto en el que nos encontramos:
 
-1. Lee c:\Users\Sergio\.gemini\antigravity-ide\scratch\antigravity-sync-project\walkthrough.md para ver el recuento de páginas y capítulos completados.
-2. Lee c:\Users\Sergio\.gemini\antigravity-ide\scratch\antigravity-sync-project\novela\personajes.md para ver la ficha de personajes y reglas físicas del mundo.
-3. Lee c:\Users\Sergio\.gemini\antigravity-ide\scratch\antigravity-sync-project\novela\escaleta.md para ver la estructura de 12 capítulos pactada.
+1. Lee novela/genesis.md para comprender las notas de dirección.
+2. Lee novela/personajes.md para ver las fichas de personajes.
+3. Lee novela/escaleta.md para ver la estructura de capítulos planificada.
+4. Lee walkthrough.md para ver el avance actual.
 
-Una vez leídos, indícame en qué capítulo nos quedamos y preséntame el desglose de escenas para el siguiente capítulo para recibir mi visto bueno.
+Una vez leídos, dime en qué punto estamos y cómo proceder con el siguiente capítulo.
 --------------------------------------------------------------------------------
-
-Archivos clave de este proyecto que se transfieren en esta carpeta:
-- novela/capitulos/capitulo_1.md (y capitulo_1_desglose.md)
-- novela/capitulos/capitulo_2.md (y capitulo_2_desglose.md)
-- novela/capitulos/capitulo_3.md (y capitulo_3_desglose.md)
-- novela/capitulos/capitulo_4.md (y capitulo_4_desglose.md)
-- novela/capitulos/capitulo_5.md (y capitulo_5_desglose.md)
-- novela/capitulos/capitulo_6.md (y capitulo_6_desglose.md)
-- novela/capitulos/capitulo_7_desglose.md
-- novela/personajes.md (Coherencia y biografías de Cole, Maya, Kael y BOB)
-- novela/escaleta.md (Los 12 capítulos planeados)
-- walkthrough.md (Historial de avances y recuento de páginas)
-- GEMINI.md (Reglas del proyecto del Workspace)
