@@ -94,8 +94,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Elementos de Modales
     const codexContentRendered = document.getElementById('codex-content-rendered');
     const escaletaContentRendered = document.getElementById('escaleta-content-rendered');
+    const genesisContentRendered = document.getElementById('genesis-content');
     const globalSearchInput = document.getElementById('global-search-input');
     const searchResultsList = document.getElementById('search-results-list');
+    let isProgressBarUpdating = false;
 
     // Controles de Ajustes
     const sliderFontSize = document.getElementById('slider-font-size');
@@ -204,8 +206,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Buscador
         globalSearchInput.addEventListener('input', handleGlobalSearch);
 
-        // Scroll
-        window.addEventListener('scroll', updateProgressBar);
+        // Scroll y Redimensionamiento
+        window.addEventListener('scroll', updateProgressBar, { passive: true });
+        window.addEventListener('resize', updateProgressBar, { passive: true });
 
         // Atajos de teclado
         document.addEventListener('keydown', handleKeyboardShortcuts);
@@ -310,6 +313,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+        updateProgressBar();
+        setTimeout(updateProgressBar, 150);
 
         // Guardar progreso automático
         readStatus[chap.id] = true;
@@ -467,8 +472,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const genesisContentRendered = document.getElementById('genesis-content');
-
     function renderCodexAndEscaleta() {
         codexContentRendered.innerHTML = renderMarkdown(NOVEL_DATA.personajesRaw);
         escaletaContentRendered.innerHTML = renderMarkdown(NOVEL_DATA.escaletaRaw);
@@ -502,16 +505,63 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateProgressBar() {
-        const scrollTop = window.scrollY;
-        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-        const scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-        progressBar.style.width = `${scrollPercent}%`;
+        if (isProgressBarUpdating) return;
+        isProgressBarUpdating = true;
 
-        if (scrollTop > 400) {
-            btnScrollTop.classList.add('visible');
-        } else {
-            btnScrollTop.classList.remove('visible');
-        }
+        window.requestAnimationFrame(() => {
+            const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+            const docHeight = (document.documentElement.scrollHeight || document.body.scrollHeight) - window.innerHeight;
+            
+            // Cálculo del progreso global acumulativo de toda la novela
+            let totalNovelProgress = 0;
+            if (typeof NOVEL_DATA !== 'undefined' && NOVEL_DATA.chapters && NOVEL_DATA.chapters.length > 0) {
+                let totalWords = 0;
+                let wordsBeforeCurrent = 0;
+
+                for (let i = 0; i < NOVEL_DATA.chapters.length; i++) {
+                    const cWords = NOVEL_DATA.chapters[i].words || (NOVEL_DATA.chapters[i].content ? NOVEL_DATA.chapters[i].content.length : 1000);
+                    totalWords += cWords;
+                    if (i < currentChapterIndex) {
+                        wordsBeforeCurrent += cWords;
+                    }
+                }
+
+                const currentChapterWords = NOVEL_DATA.chapters[currentChapterIndex]
+                    ? (NOVEL_DATA.chapters[currentChapterIndex].words || (NOVEL_DATA.chapters[currentChapterIndex].content ? NOVEL_DATA.chapters[currentChapterIndex].content.length : 1000))
+                    : 1000;
+
+                const currentScrollFraction = docHeight > 0 ? Math.min(1, Math.max(0, scrollTop / docHeight)) : 0;
+                const readWordsInCurrent = currentChapterWords * currentScrollFraction;
+
+                const grandTotalRead = wordsBeforeCurrent + readWordsInCurrent;
+                totalNovelProgress = totalWords > 0 ? Math.min(100, Math.max(0, (grandTotalRead / totalWords) * 100)) : 0;
+            } else {
+                totalNovelProgress = docHeight > 0 ? Math.min(100, Math.max(0, (scrollTop / docHeight) * 100)) : 0;
+            }
+
+            if (progressBar) {
+                progressBar.style.width = `${totalNovelProgress.toFixed(1)}%`;
+                progressBar.setAttribute('aria-valuenow', Math.round(totalNovelProgress));
+                const container = document.getElementById('progress-bar-container');
+                if (container) {
+                    container.setAttribute('title', `Progreso total de la novela: ${Math.round(totalNovelProgress)}%`);
+                }
+            }
+
+            if (headerChapterIndicator && typeof NOVEL_DATA !== 'undefined' && NOVEL_DATA.totalChapters) {
+                headerChapterIndicator.textContent = `Capítulo ${currentChapterIndex + 1} de ${NOVEL_DATA.totalChapters} • ${Math.round(totalNovelProgress)}% total`;
+            }
+
+            if (btnScrollTop) {
+                if (scrollTop > 400) {
+                    btnScrollTop.classList.add('visible');
+                } else {
+                    btnScrollTop.classList.remove('visible');
+                }
+            }
+
+            isProgressBarUpdating = false;
+        });
     }
 
     // --- SIDEBAR CONTROL ---
