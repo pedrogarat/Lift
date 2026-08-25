@@ -112,6 +112,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initApp() {
         try { loadPreferences(); } catch(e) { console.error('Error in loadPreferences:', e); }
+        if (typeof NOVEL_DATA !== 'undefined') {
+            document.title = `${NOVEL_DATA.title} | Novela Interactiva`;
+            const bTitle = document.querySelector('.brand-title');
+            const bSub = document.querySelector('.brand-subtitle');
+            const sbTitle = document.querySelector('.sidebar-info h3');
+            const sbStats = document.getElementById('sidebar-stats-text');
+            if (bTitle && NOVEL_DATA.title) bTitle.textContent = NOVEL_DATA.title;
+            if (bSub && NOVEL_DATA.subtitle) bSub.textContent = NOVEL_DATA.subtitle.toUpperCase();
+            if (sbTitle && NOVEL_DATA.title) sbTitle.textContent = NOVEL_DATA.title;
+            if (sbStats && NOVEL_DATA.totalChapters) {
+                sbStats.innerHTML = `${NOVEL_DATA.totalChapters} Capítulos &bull; ~${NOVEL_DATA.totalPages} Páginas &bull; ${NOVEL_DATA.totalWords.toLocaleString()} Palabras`;
+            }
+        }
         try { renderSidebarList(); } catch(e) { console.error('Error in renderSidebarList:', e); }
         try { renderCodexAndEscaleta(); } catch(e) { console.error('Error in renderCodexAndEscaleta:', e); }
         try { initAudiobook(); } catch(e) { console.error('Error in initAudiobook:', e); }
@@ -281,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         chapterActBadge.textContent = chap.act;
-        chapterMainTitle.textContent = `Capítulo ${chap.id}: ${chap.title}`;
+        chapterMainTitle.textContent = chap.title.startsWith('Capítulo') ? chap.title : `Capítulo ${chap.id}: ${chap.title}`;
         metaPov.textContent = `👁️ POV: ${chap.pov}`;
         metaLocation.textContent = `📍 ${chap.location}`;
         metaReadtime.textContent = `⏱️ ${chap.readTime}`;
