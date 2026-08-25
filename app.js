@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- CARGA DE PREFERENCIAS ---
     function loadPreferences() {
         const theme = localStorage.getItem('prometheus_theme') || 'obsidian';
-        const font = localStorage.getItem('prometheus_font') || 'serif';
+        const font = localStorage.getItem('prometheus_font') || 'sans';
         const fontSize = localStorage.getItem('prometheus_font_size') || '19';
         const lineHeight = localStorage.getItem('prometheus_line_height') || '1.8';
         const textWidth = localStorage.getItem('prometheus_text_width') || '800';

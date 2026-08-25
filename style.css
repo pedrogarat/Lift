@@ -22,7 +22,7 @@
     --accent-amber: #f59e0b;
     --accent-blue: #3b82f6;
     
-    --font-reader: 'Cormorant Garamond', Georgia, serif;
+    --font-reader: 'Inter', sans-serif;
     --font-ui: 'Outfit', 'Inter', sans-serif;
     --font-code: 'JetBrains Mono', monospace;
     
@@ -100,6 +100,9 @@
 }
 
 /* Tipografías */
+[data-font="serif"] {
+    --font-reader: 'Cormorant Garamond', Georgia, serif;
+}
 [data-font="sans"] {
     --font-reader: 'Inter', sans-serif;
 }
